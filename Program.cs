@@ -76,28 +76,30 @@
                     Console.Write("Invalid input. Insert X or O: ");
                 }
 
-                Console.Write("Insert the row (0, 1, or 2): ");
+                Console.Write("Insert the row: ");
                 while (true)
                 {
                     string? rowResponse = Console.ReadLine();
 
-                    if (int.TryParse(rowResponse, out rowPosition) && rowPosition >= 0 && rowPosition <= 2)
+                    if (int.TryParse(rowResponse, out rowPosition) && rowPosition >= 1 && rowPosition <= 3)
                     {
+                        rowPosition--;
                         break;
                     }
-                    Console.Write("Invalid input. Insert the row (0, 1, or 2): ");
+                    Console.Write("Invalid input. Insert the row (1, 2, or 3): ");
                 }
 
-                Console.Write("Insert the column (0, 1, or 2): ");
+                Console.Write("Insert the column: ");
                 while (true)
                 {
                     string? columnResponse = Console.ReadLine();
 
-                    if (int.TryParse(columnResponse, out columnPosition) && columnPosition >= 0 && columnPosition <= 2)
+                    if (int.TryParse(columnResponse, out columnPosition) && columnPosition >= 1 && columnPosition <= 3)
                     {
+                        columnPosition--;
                         break;
                     }
-                    Console.Write("Invalid input. Insert the column (0, 1, or 2): ");
+                    Console.Write("Invalid input. Insert the column (1, 2, or 3): ");
                 }
 
                 if (field[rowPosition, columnPosition] == ' ')
