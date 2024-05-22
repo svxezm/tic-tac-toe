@@ -13,9 +13,13 @@
         static int cols = slots.GetLength(1);
         static char winner = ' ';
         static bool gameWon = false;
+        static bool isDraw = false;
+        static string endGameResponse = "no";
 
         static void Main(string[] args)
         {
+            endGameResponse = "no";
+
             while (true)
             {
                 PrintBoard();
@@ -25,6 +29,22 @@
                 {
                     PrintBoard();
                     Console.WriteLine("The winner is... " + winner + "!");
+                }
+                else if (isDraw)
+                {
+                    PrintBoard();
+                    Console.WriteLine("This game ended in a draw.");
+                }
+
+                Console.Write("Would you like to play again? (yes, no) ");
+
+                if (gameWon || isDraw)
+                {
+                    RepeatGame();
+                }
+
+                if ((gameWon || isDraw) && endGameResponse == "no")
+                {
                     break;
                 }
             }
@@ -114,6 +134,7 @@
             }
 
             gameWon = IsRowIdentical(field, rowPosition) || IsColumnIdentical(field, columnPosition) || IsDiagonalIdentical(field);
+            isDraw = !gameWon && IsBoardFull(field);
         }
 
         public static bool IsRowIdentical(char[,] array, int rowIndex)
@@ -185,6 +206,43 @@
             }
 
             return isBackwardsDiagonalIdentical || isForwardDiagonalIdentical;
+        }
+
+        public static bool IsBoardFull(char[,] array)
+        {
+            foreach (char slot in array)
+            {
+                if (slot == ' ')
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        
+        public static void RepeatGame()
+        {
+            while (true)
+            {
+                endGameResponse = Console.ReadLine();
+
+                if (endGameResponse == "yes" || endGameResponse == "no")
+                {
+                    break;
+                }
+            }
+
+            if (endGameResponse == "yes")
+            {
+                for (int index = 0; index < rows * cols; index++)
+                {
+                    int i = index / cols;
+                    int j = index % cols;
+
+                    slots[i, j] = ' ';
+                }
+            }
         }
     }
 }
