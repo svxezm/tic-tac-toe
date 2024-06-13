@@ -59,11 +59,24 @@
                 {
                     if (j == 2)
                     {
+                        Console.ForegroundColor = ConsoleColor.Red;
                         Console.Write(slots[i, j] + " ");
+                        Console.ResetColor();
                     }
                     else
                     {
-                        Console.Write(slots[i, j] + " | ");
+                        if (slots[i, j] == 'X' || slots[i, j] == 'x')
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Blue;
+                        }
+                        Console.Write(slots[i, j]);
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                        Console.Write(" | ");
+                        Console.ResetColor();
                     }
                 }
 
@@ -71,7 +84,9 @@
 
                 if (i < 2)
                 {
+                    Console.ForegroundColor = ConsoleColor.Gray;
                     Console.WriteLine("--+---+--");
+                    Console.ResetColor();
                 }
             }
             Console.WriteLine();
@@ -87,7 +102,7 @@
                 Console.Write("Insert X or O: ");
                 while (true)
                 {
-                    char.TryParse(Console.ReadLine(), out newChar);
+                    char.TryParse(Console.ReadLine().ToUpper(), out newChar);
 
                     if (newChar == 'O' || newChar == 'o' || newChar == 'X' || newChar == 'x')
                     {
