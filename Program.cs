@@ -89,7 +89,7 @@
                 {
                     char.TryParse(Console.ReadLine(), out newChar);
 
-                    if (newChar == 'O' || newChar == 'X')
+                    if (newChar == 'O' || newChar == 'o' || newChar == 'X' || newChar == 'x')
                     {
                         break;
                     }
