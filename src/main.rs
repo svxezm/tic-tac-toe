@@ -1,11 +1,18 @@
 use clearscreen;
 use std::io::Write;
 
+#[derive(Clone, Copy, PartialEq)]
+enum Slot {
+    Empty,
+    X,
+    O,
+}
+
 struct TicTacToe {
-    slots: [[char; 3]; 3],
+    slots: [[Slot; 3]; 3],
     rows: usize,
     cols: usize,
-    winner: char,
+    winner: Slot,
     game_won: bool,
     is_draw: bool,
     game_over: bool,
@@ -14,10 +21,10 @@ struct TicTacToe {
 impl TicTacToe {
     fn init() -> Self {
         TicTacToe {
-            slots: [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']],
+            slots: [[Slot::Empty; 3]; 3],
             rows: 3,
             cols: 3,
-            winner: ' ',
+            winner: Slot::Empty,
             game_won: false,
             is_draw: false,
             game_over: false,
@@ -28,73 +35,63 @@ impl TicTacToe {
         clearscreen::clear().unwrap();
 
         for i in 0..self.rows {
-            let i = i as usize;
-
             for j in 0..self.cols {
-                let j = j as usize;
-                let current = self.slots[i][j];
+                let slot = match self.slots[i][j] {
+                    Slot::X => "\x1b[31mX\x1b[0m",
+                    Slot::O => "\x1b[34mO\x1b[0m",
+                    Slot::Empty => " ",
+                };
 
-                if j == 2 {
-                    print!("\x1b[31m {}\x1b[0m", current);
-                } else {
-                    let color = if current == 'X' || current == 'x' {
-                        "\x1b[31m"
-                    } else {
-                        "\x1B[34m"
-                    };
-                    print!(" {} {}\x1b[0m", color, current);
+                print!(" {} ", slot);
+
+                if j < 2 {
                     print!("\x1B[37m|\x1b[0m");
                 }
             }
-            println!("");
+            println!();
 
             if i < 2 {
                 println!("\x1B[37m---+---+---\x1b[0m");
             }
         }
-        println!("");
+        println!();
     }
 
-    fn is_row_identical(&mut self, row_index: usize) -> bool {
-        let first_value = self.slots[row_index][0];
+    fn is_row_identical(&mut self, row: usize) -> bool {
+        let first = self.slots[row][0];
 
-        if first_value == ' ' {
+        if first == Slot::Empty {
             return false;
         }
 
-        for col in 1..self.cols {
-            if self.slots[row_index][col] != first_value {
-                return false;
-            }
+        if self.slots[row].iter().all(|&s| s == first) {
+            self.winner = first;
+            true
+        } else {
+            false
         }
-
-        self.winner = first_value;
-        true
     }
 
-    fn is_column_identical(&mut self, column_index: usize) -> bool {
-        let column_index = column_index as usize;
-        let first_value = self.slots[0][column_index];
+    fn is_column_identical(&mut self, col: usize) -> bool {
+        let first = self.slots[0][col];
 
-        if first_value == ' ' {
+        if first == Slot::Empty {
             return false;
         }
 
-        for row in 1..self.cols {
-            if self.slots[row][column_index] != first_value {
-                return false;
-            }
+        if self.slots.iter().all(|&s| s[col] == first) {
+            self.winner = first;
+            true
+        } else {
+            false
         }
-
-        self.winner = first_value;
-        true
     }
 
     fn is_diagonal_identical(&mut self) -> bool {
         let first_value_at_backwards_diagonal = self.slots[0][0];
         let first_value_at_forward_diagonal = self.slots[0][self.rows - 1];
-        let mut is_backwards_diagonal_identical = first_value_at_backwards_diagonal != ' ';
-        let mut is_forward_diagonal_identical = first_value_at_forward_diagonal != ' ';
+        let mut is_backwards_diagonal_identical = first_value_at_backwards_diagonal != Slot::Empty;
+        let mut is_forward_diagonal_identical = first_value_at_forward_diagonal != Slot::Empty;
 
         for i in 1..self.rows {
             if self.slots[i][i] != first_value_at_backwards_diagonal {
@@ -117,7 +114,7 @@ impl TicTacToe {
     fn is_board_full(&self) -> bool {
         for i in 0..self.rows {
             for j in 0..self.cols {
-                if self.slots[i][j] == ' ' {
+                if self.slots[i][j] == Slot::Empty {
                     return false;
                 }
             }
@@ -151,20 +148,24 @@ impl TicTacToe {
         }
     }
 
-    fn get_char_input(valid_chars: Vec<char>, stdin_message: &str) -> char {
-        Self::get_input(valid_chars, stdin_message, false)
-            .chars()
-            .next()
-            .expect("Empty input.")
+    fn get_slot_input(valid_chars: Vec<char>, stdin_message: &str) -> Slot {
+        let input = Self::get_input(valid_chars, stdin_message, false);
+
+        match input.to_uppercase().trim() {
+            "X" => Slot::X,
+            "O" => Slot::O,
+            _ => Slot::Empty,
+        }
     }
 
     fn trigger_prompts(&mut self) {
+        // these two give me a warning of unused assignment for some reason
         let mut row: usize = 0;
         let mut col: usize = 0;
 
         loop {
             print!("Insert X or O: ");
-            let new_char = Self::get_char_input(vec!['X', 'O'], "Invalid input. Insert X or O: ");
+            let new_char = Self::get_slot_input(vec!['X', 'O'], "Invalid input. Insert X or O: ");
 
             print!("Insert the row: ");
             row = Self::get_input(
@@ -186,7 +187,7 @@ impl TicTacToe {
             .unwrap();
             col -= 1;
 
-            if self.slots[row][col] == ' ' {
+            if self.slots[row][col] == Slot::Empty {
                 self.slots[row][col] = new_char;
                 break;
             } else {
@@ -210,7 +211,7 @@ impl TicTacToe {
             let i = index / self.rows;
             let j = index % self.cols;
 
-            self.slots[i][j] = ' ';
+            self.slots[i][j] = Slot::Empty;
         }
     }
 }
@@ -224,7 +225,13 @@ fn main() {
 
         if game.game_won {
             game.print_board();
-            println!("The winner is... {}!", game.winner);
+            println!(
+                "The winner is... {}!",
+                match game.winner {
+                    Slot::X => 'X',
+                    _ => 'O',
+                }
+            );
         } else if game.is_draw {
             game.print_board();
             println!("This game ended in a draw.");
