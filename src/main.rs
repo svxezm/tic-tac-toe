@@ -159,9 +159,8 @@ impl TicTacToe {
     }
 
     fn trigger_prompts(&mut self) {
-        // these two give me a warning of unused assignment for some reason
-        let mut row: usize = 0;
-        let mut col: usize = 0;
+        let mut row: usize;
+        let mut col: usize;
 
         loop {
             print!("Insert X or O: ");
