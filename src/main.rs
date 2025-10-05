@@ -204,6 +204,8 @@ impl TicTacToe {
 
             if allow_empty == true && input.trim().is_empty() {
                 return String::from("");
+            } else if !allow_empty == true && input.trim().is_empty() {
+                continue;
             }
 
             let chosen_char = input
@@ -215,7 +217,10 @@ impl TicTacToe {
 
             match valid_chars.contains(&chosen_char) {
                 true => return String::from(chosen_char),
-                false => {}
+                false => {
+                    input = String::new();
+                    continue;
+                }
             }
         }
     }
