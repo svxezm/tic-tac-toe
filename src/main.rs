@@ -8,6 +8,20 @@ enum Slot {
     O,
 }
 
+enum GameState {
+    Replay,
+    Exit,
+}
+
+impl Slot {
+    fn to_char(slot: Slot) -> char {
+        match slot {
+            Slot::X => 'X',
+            _ => 'O',
+        }
+    }
+}
+
 struct TicTacToe {
     slots: [[Slot; 3]; 3],
     rows: usize,
@@ -19,8 +33,17 @@ struct TicTacToe {
 }
 
 impl TicTacToe {
-    fn init() -> Self {
-        TicTacToe {
+    fn play() {
+        loop {
+            match Self::init() {
+                GameState::Replay => continue,
+                GameState::Exit => break,
+            }
+        }
+    }
+
+    fn init() -> GameState {
+        let mut game = Self {
             slots: [[Slot::Empty; 3]; 3],
             rows: 3,
             cols: 3,
@@ -28,12 +51,61 @@ impl TicTacToe {
             game_won: false,
             is_draw: false,
             game_over: false,
+        };
+
+        print!("Which symbol would you like to use first? (X or O) ");
+        let mut current_symbol =
+            Self::get_slot_input(vec!['X', 'O'], "Invalid input. Insert X or O: ");
+
+        loop {
+            clearscreen::clear().unwrap();
+            println!(
+                "Current turn: \x1b[33m{}\x1b[0m\n",
+                Slot::to_char(current_symbol)
+            );
+
+            game.print_board();
+            game.trigger_prompts(current_symbol);
+
+            if game.game_won {
+                clearscreen::clear().unwrap();
+                game.print_board();
+                println!("The winner is... {}!", Slot::to_char(game.winner));
+            } else if game.is_draw {
+                clearscreen::clear().unwrap();
+                game.print_board();
+                println!("This game ended in a draw.");
+            }
+
+            if game.game_won || game.is_draw {
+                print!("Would you like to play again? [y/N] ");
+                std::io::stdout().flush().unwrap();
+
+                let replay = TicTacToe::get_input(
+                    vec!['Y', 'N'],
+                    "Invalid input. Please, insert only 'y' or 'n'.",
+                    true,
+                );
+
+                match replay.as_str() {
+                    "Y" => return GameState::Replay,
+                    _ => {
+                        println!("\n☆  Game Over ☆ ");
+                        return GameState::Exit;
+                    }
+                }
+            }
+
+            if !game.game_over {
+                current_symbol = match current_symbol {
+                    Slot::X => Slot::O,
+                    _ => Slot::X,
+                };
+            }
         }
     }
 
     fn print_board(&self) {
-        clearscreen::clear().unwrap();
-
         for i in 0..self.rows {
             for j in 0..self.cols {
                 let slot = match self.slots[i][j] {
@@ -158,14 +230,11 @@ impl TicTacToe {
         }
     }
 
-    fn trigger_prompts(&mut self) {
+    fn trigger_prompts(&mut self, symbol: Slot) {
         let mut row: usize;
         let mut col: usize;
 
         loop {
-            print!("Insert X or O: ");
-            let new_char = Self::get_slot_input(vec!['X', 'O'], "Invalid input. Insert X or O: ");
-
             print!("Insert the row: ");
             row = Self::get_input(
                 vec!['1', '2', '3'],
@@ -187,7 +256,7 @@ impl TicTacToe {
             col -= 1;
 
             if self.slots[row][col] == Slot::Empty {
-                self.slots[row][col] = new_char;
+                self.slots[row][col] = symbol;
                 break;
             } else {
                 println!("That slot is already filled! Try again.");
@@ -204,55 +273,8 @@ impl TicTacToe {
             || self.is_diagonal_identical();
         self.is_draw = !self.game_won && self.is_board_full();
     }
-
-    fn reset_board(&mut self) {
-        for index in 0..self.rows * self.cols {
-            let i = index / self.rows;
-            let j = index % self.cols;
-
-            self.slots[i][j] = Slot::Empty;
-        }
-    }
 }
 
 fn main() {
-    let mut game = TicTacToe::init();
-
-    loop {
-        game.print_board();
-        game.trigger_prompts();
-
-        if game.game_won {
-            game.print_board();
-            println!(
-                "The winner is... {}!",
-                match game.winner {
-                    Slot::X => 'X',
-                    _ => 'O',
-                }
-            );
-        } else if game.is_draw {
-            game.print_board();
-            println!("This game ended in a draw.");
-        }
-
-        if game.game_won || game.game_over {
-            print!("Would you like to play again? [y/N] ");
-            std::io::stdout().flush().unwrap();
-
-            let replay = TicTacToe::get_input(
-                vec!['Y', 'N'],
-                "Invalid input. Please, insert only 'y' or 'n'.",
-                true,
-            );
-
-            match replay.as_str() {
-                "Y" => game.reset_board(),
-                _ => {
-                    println!("\n☆  Game Over ☆ ");
-                    break;
-                }
-            }
-        }
-    }
+    TicTacToe::play();
 }
